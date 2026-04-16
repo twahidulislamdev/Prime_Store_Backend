@@ -43,10 +43,10 @@ const SignUpController = async (req, res) => {
     const now = new Date();
 
     // Add 5 minutes
-    const expiresOtp = new Date(now.getTime() + 5 * 60 * 1000);
+    const expireOtp = new Date(now.getTime() + 5 * 60 * 1000);
 
     // Format in Bangladesh time
-    const bangladeshExpireTime = expiresOtp.toLocaleString("en-US", {
+    const bangladeshExpireTime = expireOtp.toLocaleString("en-US", {
       timeZone: "Asia/Dhaka",
       hour: "2-digit",
       minute: "2-digit",
@@ -62,7 +62,7 @@ const SignUpController = async (req, res) => {
         email,
         password: hash,
         otp: otp,
-        expiresOtp: expiresOtp,
+        expireOtp: expireOtp,
       });
       emailVerification(email, otp);
       user.save();

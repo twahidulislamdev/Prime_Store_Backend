@@ -25,7 +25,7 @@ const authSchema = new Schema({
   otp: {
     type: String,
   },
-  expiresOtp: {
+  expireOtp: {
     type: Date,
   },
   isVerified: {

@@ -17,7 +17,7 @@ app.get("/", (req, res) => {
 // Use This for session management Start
 app.use(
   session({
-    secret: "enmoon123",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false },
