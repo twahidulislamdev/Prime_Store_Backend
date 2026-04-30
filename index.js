@@ -3,9 +3,9 @@ const express = require("express");
 const app = express();
 const port = 3000;
 require("dotenv").config();
-const dbConnection = require("./database/dbConnection");
+const { dbConfig } = require("./config/config");
+const { jwtConfig } = require("./config/config");
 const routes = require("./routes");
-const session = require("express-session");
 
 // Middleware to parse JSON requests
 app.use(express.json());
@@ -14,19 +14,11 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-// Use This for session management Start
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false },
-  }),
-);
-// Use this for session management End
-
 // Database Connection
-dbConnection();
+dbConfig();
+
+// jwtConfig
+jwtConfig();
 
 // Routing
 app.use("/api", routes);

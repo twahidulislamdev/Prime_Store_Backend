@@ -22,11 +22,11 @@ const authSchema = new Schema({
   otp: {
     type: String,
   },
-  otp: {
-    type: String,
-  },
   expireOtp: {
     type: Date,
+  },
+  token: {
+    type: String,
   },
   isVerified: {
     type: Boolean,
