@@ -5,6 +5,8 @@ const {
   LoginController,
   LogOutController,
   DashboardController,
+  VerifyTokenController,
+  RefreshTokenController,
 } = require("../../controllers/authController");
 
 const {
@@ -18,6 +20,8 @@ router.post("/logout", LogOutController);
 router.get("/dashboard", DashboardController);
 router.post("/otpverification", InitialOtpController);
 router.post("/resendotp", ResendOtpController);
+router.get("/verifytoken", VerifyTokenController);
+router.get("/refreshtoken", RefreshTokenController);
 
 // router.get("/login", (req, res) => {
 //   res.send("Data Ache");

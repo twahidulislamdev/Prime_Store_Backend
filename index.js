@@ -6,9 +6,11 @@ require("dotenv").config();
 const { dbConfig } = require("./config/config");
 const { jwtConfig } = require("./config/config");
 const routes = require("./routes");
+const cookieParser = require('cookie-parser');
 
 // Middleware to parse JSON requests
 app.use(express.json());
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
