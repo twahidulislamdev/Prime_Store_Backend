@@ -25,8 +25,13 @@ const authSchema = new Schema({
   expireOtp: {
     type: Date,
   },
-  token: {
+  accessToken: {
     type: String,
+    required: true,
+  },
+  refreshToken: {
+    type: String,
+    required: true,
   },
   isVerified: {
     type: Boolean,

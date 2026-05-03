@@ -1,7 +1,8 @@
 const authSchema = require("../model/authSchema");
 const crypto = require("crypto");
+const emailVerification = require("../helpers/emailVerification");
 
-const InitialOtpController = async (req, res) => {
+const VerifyOtpController = async (req, res) => {
   const { email, otp } = req.body;
   const user = await authSchema.findOne({ email });
   if (!user) {
@@ -11,20 +12,18 @@ const InitialOtpController = async (req, res) => {
   }
   if (user.isVerified) {
     return res.json({
-      message: "User Is Verified",
+      message: "User Already Verified",
     });
   }
   if (user.otp !== otp || user.expireOtp < Date.now()) {
-    return res
-      .status(400)
-      .json({ message: "Invalid OTP. Please Input Correct OTP" });
+    return res.status(400).json({ message: "Incorrect OTP or Expired OTP" });
   }
   user.isVerified = true;
   user.otp = undefined;
   user.expireOtp = undefined;
   await user.save();
   res.status(200).json({
-    message: "Email Verification Done",
+    message: "Email Verified Successfully",
   });
 };
 
@@ -33,17 +32,17 @@ const ResendOtpController = async (req, res) => {
   const user = await authSchema.findOne({ email });
   // Check if user exists
   if (!user) {
-    return res.status(400).json({ message: "Error: User Not Found" });
+    return res.status(400).json({ message: "User Not Found" });
   }
   // Check if user is already verified
   if (user.isVerified) {
-    return res.status(400).json({ message: "Error: Email already verified" });
+    return res.status(400).json({ message: "Email Already Verified" });
   }
   // Check if OTP is not Expired Yet. Then Don't Generate New OTP
   if (user.expireOtp && user.expireOtp > Date.now()) {
     return res.status(400).json({
       message:
-        "Error: OTP is still valid. Please wait for it to expire before requesting a new one.",
+        "Error: We already sent you an OTP. Please wait 5 minutes before resending another one.",
     });
   }
   // Only send new OTP if user is not verified and OTP is expired
@@ -54,8 +53,7 @@ const ResendOtpController = async (req, res) => {
   await user.save();
   await emailVerification(email, otp, true);
   res.status(200).json({
-    message: "OTP Resend Successfully",
+    message: "New OTP Has Been Sent To Your Email Successfully",
   });
 };
-
-module.exports = { InitialOtpController, ResendOtpController };
+module.exports = { VerifyOtpController, ResendOtpController };

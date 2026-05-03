@@ -4,27 +4,42 @@ const {
   SignUpController,
   LoginController,
   LogOutController,
+  LogOutAllController,
   DashboardController,
   VerifyTokenController,
   RefreshTokenController,
 } = require("../../controllers/authController");
 
 const {
-  InitialOtpController,
+  VerifyOtpController,
   ResendOtpController,
 } = require("../../controllers/otpController");
 
+// ================== Sign Up Route ==================
 router.post("/signup", SignUpController);
-router.post("/login", LoginController);
-router.post("/logout", LogOutController);
-router.get("/dashboard", DashboardController);
-router.post("/otpverification", InitialOtpController);
+
+// ================== Verify OTP Route ==================
+router.post("/verifyotp", VerifyOtpController);
+
+// ================== Resend OTP Route ==================
 router.post("/resendotp", ResendOtpController);
+
+// ================== Login Route ==================
+router.post("/login", LoginController);
+
+// ================== Dashboard Route ==================
+router.get("/dashboard", DashboardController);
+
+// ================== Verify Token Route ==================
 router.get("/verifytoken", VerifyTokenController);
+
+// ================== Refresh Token Route ==================
 router.get("/refreshtoken", RefreshTokenController);
 
-// router.get("/login", (req, res) => {
-//   res.send("Data Ache");
-// });
+// ================== Log Out Route ==================
+router.post("/logout", LogOutController);
+
+// ================== Log Out All Route ==================
+router.post("/logoutall", LogOutAllController);
 
 module.exports = router;
