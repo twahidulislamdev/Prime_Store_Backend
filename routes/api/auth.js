@@ -24,10 +24,10 @@ router.post("/verifyotp", VerifyOtpController);
 // ================== Resend OTP Route ==================
 router.post("/resendotp", ResendOtpController);
 
-// ================== Login Route ==================
+// ================== Login Route =======================
 router.post("/login", LoginController);
 
-// ================== Dashboard Route ==================
+// ================== Dashboard Route ===================
 router.get("/dashboard", DashboardController);
 
 // ================== Verify Token Route ==================

@@ -268,91 +268,139 @@ const LoginController = async (req, res) => {
 const LogOutController = async (req, res) => {
   try {
     const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
     if (!refreshToken) {
-      return res.status(401).json({ message: "Refresh Token Is Not Found" });
+      return res.status(401).json({
+        message: "Refresh Token Is Required",
+      });
     }
-    // Verify Refresh Token
+
     let decoded;
     try {
       decoded = jwt.verify(refreshToken, jwtConfig().secret);
     } catch (err) {
-      return res.status(401).json({ message: "Invalid Refresh Token" });
+      return res.status(401).json({
+        message: "Invalid Refresh Token",
+      });
     }
+
     if (!decoded || !decoded.id) {
-      return res.status(401).json({ message: "Invalid Refresh Token" });
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
     }
 
     const user = await authSchema.findById(decoded.id);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({
+        message: "User Not Found",
+      });
     }
 
+    // Find matching session (hashed token)
     const sessions = await Session.find({
       user: decoded.id,
       revoked: false,
     });
 
-    let session = null;
-    for (const s of sessions) {
-      const match = await bcrypt.compare(refreshToken, s.refreshToken);
+    let currentSession = null;
+    for (const session of sessions) {
+      const match = await bcrypt.compare(refreshToken, session.refreshToken);
       if (match) {
-        session = s;
+        currentSession = session;
         break;
       }
     }
 
-    if (!session) {
-      return res.status(404).json({ message: "Session not found" });
+    if (!currentSession) {
+      return res.status(404).json({
+        message: "Session Not Found",
+      });
     }
 
-    session.revoked = true;
-    await session.save();
+    // Revoke only this session
+    currentSession.revoked = true;
+    await currentSession.save();
+
+    // Clear cookie
     res.clearCookie("refreshToken");
-    return res.status(200).json({ message: "Logout successful" });
+
+    return res.status(200).json({
+      message: "Logout Successful",
+    });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      error: error.message,
+    });
   }
 };
 
 // ============ LogOut All Devices Controller =================
 const LogOutAllController = async (req, res) => {
   try {
-    let decoded;
-    const authHeader = req.headers.authorization;
-    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+    const secret = jwtConfig().secret;
+    let userId = null;
 
-    try {
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        const token = authHeader.split(" ")[1];
-        decoded = jwt.verify(token, jwtConfig().secret);
-      } else if (refreshToken) {
-        decoded = jwt.verify(refreshToken, jwtConfig().secret);
+    // Try refresh token from cookie first (long-lived, reliable)
+    const cookieRefreshToken = req.cookies?.refreshToken;
+    if (cookieRefreshToken) {
+      try {
+        const decoded = jwt.verify(cookieRefreshToken, secret);
+        if (decoded?.id) {
+          userId = decoded.id;
+        }
+      } catch (_) {
+
       }
-    } catch (err) {
-      return res.status(401).json({ message: "Invalid Or Expired Token" });
     }
 
-    if (!decoded || !decoded.id) {
-      return res.status(401).json({ message: "Refresh Token Is Not Found" });
+    // Fallback: try access token from Authorization header
+    if (!userId) {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({
+          message: "Authentication Required. Provide a valid Bearer token or refresh token cookie.",
+        });
+      }
+
+      const token = authHeader.split(" ")[1];
+      try {
+        const decoded = jwt.verify(token, secret);
+        if (!decoded?.id) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+        userId = decoded.id;
+      } catch (err) {
+        return res.status(401).json({
+          message: "Invalid Or Expired Access Token",
+        });
+      }
     }
 
-    // Revoke all active sessions for this user
+    // Revoke ALL sessions for this user
     await Session.updateMany(
-      { user: decoded.id, revoked: false },
+      { user: userId, revoked: false },
       { $set: { revoked: true } },
     );
 
-    // Clear tokens in user schema
-    await authSchema.findByIdAndUpdate(decoded.id, {
-      $set: { accessToken: "", refreshToken: "" },
+    // Clear tokens stored in DB
+    await authSchema.findByIdAndUpdate(userId, {
+      $set: {
+        accessToken: "",
+        refreshToken: "",
+      },
     });
 
+    // Clear refresh token cookie
     res.clearCookie("refreshToken");
-    return res
-      .status(200)
-      .json({ message: "Logout from all devices successful" });
+
+    return res.status(200).json({
+      message: "Logout From All Devices Successful",
+    });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      error: error.message,
+    });
   }
 };
 
