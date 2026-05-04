@@ -1,10 +1,11 @@
-const authSchema = require("../model/authSchema");
 const crypto = require("crypto");
-const emailVerification = require("../helpers/emailVerification");
+const emailVerification = require("../services/email.service");
+const AuthSchema = require("../models/auth.model");
 
-const VerifyOtpController = async (req, res) => {
+// ============ Verify OTP Controller =============
+const VerifyOtp = async (req, res) => {
   const { email, otp } = req.body;
-  const user = await authSchema.findOne({ email });
+  const user = await AuthSchema.findOne({ email });
   if (!user) {
     return res.status(400).json({
       message: "User Not Found",
@@ -27,9 +28,10 @@ const VerifyOtpController = async (req, res) => {
   });
 };
 
-const ResendOtpController = async (req, res) => {
+// ============ Resend OTP Controller =============
+const ResendOtp = async (req, res) => {
   const { email } = req.body;
-  const user = await authSchema.findOne({ email });
+  const user = await AuthSchema.findOne({ email });
   // Check if user exists
   if (!user) {
     return res.status(400).json({ message: "User Not Found" });
@@ -56,4 +58,4 @@ const ResendOtpController = async (req, res) => {
     message: "New OTP Has Been Sent To Your Email Successfully",
   });
 };
-module.exports = { VerifyOtpController, ResendOtpController };
+module.exports = { VerifyOtp, ResendOtp };

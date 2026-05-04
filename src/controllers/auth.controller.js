@@ -1,14 +1,14 @@
-const authSchema = require("../model/authSchema");
+const User = require("../models/auth.model");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
-const emailVerification = require("../helpers/emailVerification");
-const emailValidation = require("../helpers/emailValidation");
 const jwt = require("jsonwebtoken");
-const { jwtConfig } = require("../config/config");
-const Session = require("../model/sessionSchema");
+const { jwtConfig } = require("../config/jwt");
+const Session = require("../models/session.model");
+const emailVerification = require("../services/email.service");
+
 
 // ============ SignUp Controller =================
-const SignUpController = async (req, res) => {
+const SignUp = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
     if (!firstName) {
@@ -24,7 +24,7 @@ const SignUpController = async (req, res) => {
       return res.json({ message: "Error: Password Required" });
     }
 
-    const duplicateEmail = await authSchema.findOne({ email });
+    const duplicateEmail = await User.findOne({ email });
     if (duplicateEmail) {
       return res.json({ message: "Email Already Exists" });
     }
@@ -45,7 +45,8 @@ const SignUpController = async (req, res) => {
 
     // Hash Password using bcrypt
     const hash = await bcrypt.hash(password, 10);
-    const user = new authSchema({
+    // Create New User
+    const user = new User({
       firstName,
       lastName,
       email,
@@ -95,7 +96,7 @@ const SignUpController = async (req, res) => {
 };
 
 // =========== Verify AccessToken Controller  =================
-const VerifyTokenController = (req, res) => {
+const VerifyToken = (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -114,7 +115,7 @@ const VerifyTokenController = (req, res) => {
 };
 
 // ======= Ganerate Anothe  Access Token  Using  Refresh Token ======
-const RefreshTokenController = async (req, res) => {
+const RefreshToken = async (req, res) => {
   try {
     const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
     if (!refreshToken) {
@@ -123,7 +124,7 @@ const RefreshTokenController = async (req, res) => {
     //  Decode Refresh Token
     const decoded = jwt.verify(refreshToken, jwtConfig().secret);
     // Find User By Id
-    const user = await authSchema.findById(decoded.id);
+    const user = await User.findById(decoded.id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -198,11 +199,11 @@ const RefreshTokenController = async (req, res) => {
 };
 
 // ============ Login Controller =================
-const LoginController = async (req, res) => {
+const Login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await authSchema.findOne({ email });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -265,7 +266,7 @@ const LoginController = async (req, res) => {
 };
 
 // ============ LogOut Controller =================
-const LogOutController = async (req, res) => {
+const LogOut = async (req, res) => {
   try {
     const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
@@ -290,7 +291,7 @@ const LogOutController = async (req, res) => {
       });
     }
 
-    const user = await authSchema.findById(decoded.id);
+    const user = await User.findById(decoded.id);
     if (!user) {
       return res.status(404).json({
         message: "User Not Found",
@@ -336,7 +337,7 @@ const LogOutController = async (req, res) => {
 };
 
 // ============ LogOut All Devices Controller =================
-const LogOutAllController = async (req, res) => {
+const LogOutAll = async (req, res) => {
   try {
     const secret = jwtConfig().secret;
     let userId = null;
@@ -349,9 +350,7 @@ const LogOutAllController = async (req, res) => {
         if (decoded?.id) {
           userId = decoded.id;
         }
-      } catch (_) {
-
-      }
+      } catch (_) {}
     }
 
     // Fallback: try access token from Authorization header
@@ -359,7 +358,8 @@ const LogOutAllController = async (req, res) => {
       const authHeader = req.headers.authorization;
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return res.status(401).json({
-          message: "Authentication Required. Provide a valid Bearer token or refresh token cookie.",
+          message:
+            "Authentication Required. Provide a valid Bearer token or refresh token cookie.",
         });
       }
 
@@ -384,7 +384,7 @@ const LogOutAllController = async (req, res) => {
     );
 
     // Clear tokens stored in DB
-    await authSchema.findByIdAndUpdate(userId, {
+    await User.findByIdAndUpdate(userId, {
       $set: {
         accessToken: "",
         refreshToken: "",
@@ -405,16 +405,16 @@ const LogOutAllController = async (req, res) => {
 };
 
 // ============ Dashboard Controller =================
-const DashboardController = (req, res) => {
+const Dashboard = (req, res) => {
   return res.json({ message: "Access Denied" });
 };
 
 module.exports = {
-  SignUpController,
-  LoginController,
-  LogOutController,
-  LogOutAllController,
-  VerifyTokenController,
-  RefreshTokenController,
-  DashboardController,
+  SignUp,
+  VerifyToken,
+  RefreshToken,
+  Login,
+  LogOut,
+  LogOutAll,
+  Dashboard,
 };

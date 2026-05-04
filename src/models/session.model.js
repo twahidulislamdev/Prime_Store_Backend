@@ -1,4 +1,3 @@
-const express = require("express");
 const mongoose = require("mongoose");
 
 const sessionSchema = new mongoose.Schema(
@@ -8,13 +7,13 @@ const sessionSchema = new mongoose.Schema(
       ref: "user",
       required: [true, "User ID Required"],
     },
-    refreshToken: {
-      type: String,
-      required: [true, "Refresh Token Hash Is Required"],
-    },
     ip: {
       type: String,
       required: [true, "Ip Address Is Required"],
+    },
+    revoked: {
+      type: Boolean,
+      default: false,
     },
     userAgent: {
       type: String,
@@ -24,9 +23,9 @@ const sessionSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    revoked: {
-      type: Boolean,
-      default: false,
+    refreshToken: {
+      type: String,
+      required: [true, "Refresh Token Hash Is Required"],
     },
   },
   { timestamps: true },
