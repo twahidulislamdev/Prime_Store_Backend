@@ -5,15 +5,12 @@ const {
   Login,
   LogOut,
   LogOutAll,
-  Dashboard,
-  VerifyToken,
+  VerifyOtp,
+  ResendOtp,
   RefreshToken,
 } = require("../../controllers/auth.controller");
 
-const {
-  VerifyOtp,
-  ResendOtp,
-} = require("../../services/auth.service");
+const { VerifyToken } = require("../../middleware/auth.middleware");
 
 // ================== Sign Up Route ==================
 router.post("/signup", SignUp);
@@ -27,11 +24,13 @@ router.post("/resendotp", ResendOtp);
 // ================== Login Route =======================
 router.post("/login", Login);
 
-// ================== Dashboard Route ===================
-router.get("/dashboard", Dashboard);
-
 // ================== Verify Token Route ==================
-router.get("/verifytoken", VerifyToken);
+router.get("/verifytoken", VerifyToken, (req, res) => {
+  return res.json({
+    message: "User Data Retrieved Successfully",
+    user: req.user,
+  });
+});
 
 // ================== Refresh Token Route ==================
 router.get("/refreshtoken", RefreshToken);

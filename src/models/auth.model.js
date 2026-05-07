@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-const AuthSchema = new Schema({
+const UserSchema = new Schema({
   firstName: {
     type: String,
     required: true,
@@ -42,4 +42,4 @@ const AuthSchema = new Schema({
     enum: ["user", "admin"],
   },
 });
-module.exports = mongoose.model("UserList", AuthSchema);
+module.exports = mongoose.model("UserList", UserSchema);
